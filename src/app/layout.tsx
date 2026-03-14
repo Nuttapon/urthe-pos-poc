@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "URTHE POS — Hardware Test",
   description: "POC for Star mPOP hardware integration",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     title: "URTHE POS",
@@ -27,6 +28,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({

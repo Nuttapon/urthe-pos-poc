@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { ScanEntry, PassPRNTResult } from "@/types";
 import { openCashDrawer, printReceipt, parseCallback } from "@/lib/passprnt";
+
+const CameraScanner = dynamic(() => import("@/components/CameraScanner"), { ssr: false });
 
 const SAMPLE_RECEIPT_HTML = `
 <html><body style="font-family:monospace;font-size:12px;width:384px;">
@@ -19,8 +22,6 @@ const SAMPLE_RECEIPT_HTML = `
 export default function Home() {
   const [scanHistory, setScanHistory] = useState<ScanEntry[]>([]);
   const [printerStatus, setPrinterStatus] = useState<PassPRNTResult | null>(null);
-  const [scanText, setScanText] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Parse PassPRNT callback on mount
   useEffect(() => {
@@ -32,20 +33,11 @@ export default function Home() {
     }
   }, []);
 
-  function handleScanKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key !== "Enter") return;
-
-    // Get the current line (text after last newline)
-    const lines = scanText.split("\n");
-    const currentLine = lines[lines.length - 1].trim();
-
-    if (currentLine.length >= 3) {
-      setScanHistory((prev) => [
-        { barcode: currentLine, timestamp: new Date() },
-        ...prev,
-      ]);
-    }
-    // Let Enter naturally create a new line in the textarea
+  function handleScan(barcode: string) {
+    setScanHistory((prev) => [
+      { barcode, timestamp: new Date() },
+      ...prev,
+    ]);
   }
 
   return (
@@ -86,18 +78,7 @@ export default function Home() {
         <section className="rounded-xl bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-lg font-semibold text-gray-800">Barcode Scanner</h2>
 
-          <p className="mb-2 text-sm text-gray-500">
-            แตะในกล่องด้านล่างก่อน แล้วค่อยสแกน
-          </p>
-          <textarea
-            ref={textareaRef}
-            value={scanText}
-            onChange={(e) => setScanText(e.target.value)}
-            onKeyDown={handleScanKeyDown}
-            rows={5}
-            placeholder="แตะที่นี่ก่อน แล้วสแกนบาร์โค้ด..."
-            className="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+          <CameraScanner onScan={handleScan} />
 
           {scanHistory.length > 0 && (
             <div className="mt-4">
