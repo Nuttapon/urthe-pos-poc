@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const SCAN_THRESHOLD_MS = 50;
+const SCAN_THRESHOLD_MS = 100;
 const MIN_BARCODE_LENGTH = 3;
 
 export function useBarcodeScanner(onScan: (barcode: string) => void): void {
@@ -19,21 +19,23 @@ export function useBarcodeScanner(onScan: (barcode: string) => void): void {
 
       const now = Date.now();
 
-      // Reset buffer if too much time has passed since last keystroke
-      if (now - lastKeyTimeRef.current > SCAN_THRESHOLD_MS) {
-        bufferRef.current = "";
-      }
-
-      lastKeyTimeRef.current = now;
-
+      // Handle Enter BEFORE reset check — scanner may delay Enter slightly after last char
       if (e.key === "Enter") {
         if (bufferRef.current.length >= MIN_BARCODE_LENGTH) {
           e.preventDefault();
           onScanRef.current(bufferRef.current);
         }
         bufferRef.current = "";
+        lastKeyTimeRef.current = 0;
         return;
       }
+
+      // Reset buffer if too much time has passed since last keystroke
+      if (now - lastKeyTimeRef.current > SCAN_THRESHOLD_MS) {
+        bufferRef.current = "";
+      }
+
+      lastKeyTimeRef.current = now;
 
       // Only buffer printable single characters
       if (e.key.length === 1) {
